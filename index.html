@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+</head>
+<body>
+  <canvas id="visualizer" width="1080" height="720"></canvas>
+  <input id="file" type="file">
+  <script>
+    const worker = new Worker('worker.js')
+    const file = document.getElementById('file');
+
+    let audioContext = new (AudioContext || WebkitAudioContext)()
+    let analyser = audioContext.createAnalyser()
+    let audioFile, audioUrl, source 
+
+    function readFile(file, callback) {
+      let reader = new FileReader(file)
+      reader.onload = function (e) { callback(e.target.result) }
+      reader.readAsArrayBuffer(file)
+    }
+
+    worker.addEventListener('message', (e) => {
+      let fft = new Uint8Array(analyser.frequencyBinCount)
+      analyser.getByteFrequencyData(fft)
+      worker.postMessage({
+        fft: fft,
+        duration: source.buffer?.duration,
+        position: source.context.currentTime
+      })
+    })
+
+    file.addEventListener('change', event => {
+      audioFile = event.target.files[0]
+
+      readFile(audioFile, (buffer) => {
+        audioContext.decodeAudioData(buffer, (audioBuffer) => {
+          source.buffer = audioBuffer
+          source.start()
+        })
+      })
+
+      source = audioContext.createBufferSource()
+      source.connect(analyser)
+      source.connect(audioContext.destination)
+
+      let canvas = document.getElementById('visualizer').transferControlToOffscreen()
+      worker.postMessage({ canvas }, [canvas])
+    })
+
+    let canvas = document.getElementById('visualizer')
+    let chunks = []
+
+    file.addEventListener('click', () => this.value = "")
+  </script>
+</body>
+</html>

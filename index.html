@@ -14,6 +14,7 @@
 
     let audioContext = new (AudioContext || WebkitAudioContext)()
     let analyser = audioContext.createAnalyser()
+    let recorderDestination = audioContext.createMediaStreamDestination()
     let audioFile, audioUrl, source
     let visualizer = document.createElement('canvas')
     visualizer.width = 1080
@@ -26,18 +27,28 @@
       reader.readAsArrayBuffer(file)
     }
 
-    worker.addEventListener('message', (e) => {
+    let stopped = false
+    worker.addEventListener('message', async (e) => {
       if (e.data.image) {
-        context.putImageData(e.data.image, 0, 0)
+        let width = 4 * e.data.image.width / 5
+        let height = 4 * e.data.image.height / 5
+        let bitmap = await createImageBitmap(e.data.image, {
+          resizeWidth: width,
+          resizeHeight: height
+        })
+        context.fillRect(0, 0, visualizer.width, visualizer.height)
+        context.drawImage(bitmap, visualizer.width/2 - bitmap.width/2, visualizer.height/2 - bitmap.height/2)
       }
 
-      let fft = new Uint8Array(analyser.frequencyBinCount)
-      analyser.getByteFrequencyData(fft)
-      worker.postMessage({
-        fft: fft,
-        duration: source.buffer?.duration,
-        position: source.context.currentTime
-      })
+      if (!stopped) {
+        let fft = new Uint8Array(analyser.frequencyBinCount)
+        analyser.getByteFrequencyData(fft)
+        worker.postMessage({
+          fft: fft,
+          duration: source.buffer?.duration,
+          position: source.context.currentTime
+        })
+      }
     })
 
     file.addEventListener('change', event => {
@@ -55,6 +66,7 @@
       source = audioContext.createBufferSource()
       source.connect(analyser)
       source.connect(audioContext.destination)
+      source.connect(recorderDestination)
 
       
       let canvas = new OffscreenCanvas(visualizer.width, visualizer.height)
@@ -66,7 +78,11 @@
     video.srcObject = stream
 
     let chunks = []
-    let recorder = new MediaRecorder(stream, {
+
+    let recorder = new MediaRecorder(new MediaStream([
+      stream.getVideoTracks()[0],
+      recorderDestination.stream.getAudioTracks()[0]
+    ]),{
       mimeType: 'video/webm'
     })
 
@@ -78,9 +94,9 @@
     }
 
     recorder.onstop = function(event) {
+      stopped = true
       let blob = new Blob(chunks, { type: 'video/webm' })
       let url = URL.createObjectURL(blob)
-      window.open(url)
       let a = document.getElementById('download')
       a.download = `${audioFile.name}.webm`
       a.href = url

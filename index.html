@@ -5,15 +5,20 @@
   <title></title>
 </head>
 <body>
-  <canvas id="visualizer" width="1080" height="720"></canvas>
+  <video id="video"></video>
   <input id="file" type="file">
+  <a id="download">Download</a>
   <script>
     const worker = new Worker('worker.js')
     const file = document.getElementById('file');
 
     let audioContext = new (AudioContext || WebkitAudioContext)()
     let analyser = audioContext.createAnalyser()
-    let audioFile, audioUrl, source 
+    let audioFile, audioUrl, source
+    let visualizer = document.createElement('canvas')
+    visualizer.width = 1080
+    visualizer.height = 720
+    let context = visualizer.getContext('2d')
 
     function readFile(file, callback) {
       let reader = new FileReader(file)
@@ -22,6 +27,10 @@
     }
 
     worker.addEventListener('message', (e) => {
+      if (e.data.image) {
+        context.putImageData(e.data.image, 0, 0)
+      }
+
       let fft = new Uint8Array(analyser.frequencyBinCount)
       analyser.getByteFrequencyData(fft)
       worker.postMessage({
@@ -36,8 +45,10 @@
 
       readFile(audioFile, (buffer) => {
         audioContext.decodeAudioData(buffer, (audioBuffer) => {
+          recorder.start(audioBuffer.duration * 1000)
           source.buffer = audioBuffer
           source.start()
+          video.play()
         })
       })
 
@@ -45,12 +56,35 @@
       source.connect(analyser)
       source.connect(audioContext.destination)
 
-      let canvas = document.getElementById('visualizer').transferControlToOffscreen()
+      
+      let canvas = new OffscreenCanvas(visualizer.width, visualizer.height)
       worker.postMessage({ canvas }, [canvas])
     })
 
-    let canvas = document.getElementById('visualizer')
+    let stream = visualizer.captureStream()
+    let video = document.getElementById('video')
+    video.srcObject = stream
+
     let chunks = []
+    let recorder = new MediaRecorder(stream, {
+      mimeType: 'video/webm'
+    })
+
+    recorder.ondataavailable = function (event) {
+      chunks.push(event.data)
+
+      if (recorder.state === 'recording')
+        recorder.stop()
+    }
+
+    recorder.onstop = function(event) {
+      let blob = new Blob(chunks, { type: 'video/webm' })
+      let url = URL.createObjectURL(blob)
+      window.open(url)
+      let a = document.getElementById('download')
+      a.download = `${audioFile.name}.webm`
+      a.href = url
+    }
 
     file.addEventListener('click', () => this.value = "")
   </script>

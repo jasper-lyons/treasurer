@@ -11,7 +11,9 @@ self.onmessage = function (event) {
     position = event.data.position
     if (duration && position)
       draw()
-    self.postMessage('fft')
+
+    let image = context.getImageData(0, 0, canvas.width, canvas.height)
+    self.postMessage({ image: image })
   }
 }
 

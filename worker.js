@@ -38,6 +38,7 @@ function setup() {
   context.stroke();
 
   radius = (dimension/2) - (edge/2) - gap
+  context.setTransform(1,0,0,1,0,0)
 }
 
 function map(value, start, end, newStart, newEnd) {
@@ -46,13 +47,12 @@ function map(value, start, end, newStart, newEnd) {
 
 function draw() {
   context.translate(canvas.width/2, canvas.height/2)
-
-  context.rotate((2 * Math.PI) * (position / duration))
+  context.rotate((2 * Math.PI) * (position / duration) - (Math.PI/2))
 
   for (let i = 0; i < fft.length; i++) {
     let amplitude = (255 - fft[i])
     let x = radius - (radius * (i / fft.length))
-    context.fillStyle = `rgba(${amplitude}, ${amplitude}, ${amplitude}, 0.5)`
+    context.fillStyle = `rgba(${amplitude}, ${amplitude}, ${amplitude}, 1)`
     context.beginPath()
     context.arc(x, 0, map(x, 0, radius, .2, 1), 0, Math.PI * 2)
     context.fill()

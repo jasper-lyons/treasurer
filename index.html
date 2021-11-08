@@ -5,7 +5,7 @@
   <title></title>
 </head>
 <body>
-  <video id="video"></video>
+  <video id="video" width="1080" height="720"></video>
   <input id="file" type="file">
   <a id="download">Download</a>
   <script>
@@ -17,9 +17,16 @@
     let recorderDestination = audioContext.createMediaStreamDestination()
     let audioFile, audioUrl, source
     let visualizer = document.createElement('canvas')
-    visualizer.width = 1080
-    visualizer.height = 720
+    let scale = window.devicePixelRatio
+    visualizer.width = Math.floor(1080 * scale)
+    visualizer.height = Math.floor(720 * scale)
     let context = visualizer.getContext('2d')
+    // setup the static areas of the video
+    context.fillStyle = 'rgb(0,0,0)'
+    context.fillRect(0, 0, visualizer.width, visualizer.height)
+    context.fillStyle = 'rgb(255,255,255)'
+    context.font = '120px serif'
+    context.fillText('treasurer', 50, 120)
 
     function readFile(file, callback) {
       let reader = new FileReader(file)
@@ -30,14 +37,15 @@
     let stopped = false
     worker.addEventListener('message', async (e) => {
       if (e.data.image) {
-        let width = 4 * e.data.image.width / 5
-        let height = 4 * e.data.image.height / 5
+        let width = 4 * visualizer.height / 5
         let bitmap = await createImageBitmap(e.data.image, {
           resizeWidth: width,
-          resizeHeight: height
+          resizeHeight: width
         })
-        context.fillRect(0, 0, visualizer.width, visualizer.height)
-        context.drawImage(bitmap, visualizer.width/2 - bitmap.width/2, visualizer.height/2 - bitmap.height/2)
+        context.drawImage(
+          bitmap,
+          visualizer.width/2 - bitmap.width/2,
+          visualizer.height/2 - bitmap.height/2)
       }
 
       if (!stopped) {
@@ -67,10 +75,12 @@
       source.connect(analyser)
       source.connect(audioContext.destination)
       source.connect(recorderDestination)
-
       
-      let canvas = new OffscreenCanvas(visualizer.width, visualizer.height)
-      worker.postMessage({ canvas }, [canvas])
+      let canvas = new OffscreenCanvas(
+        visualizer.height,
+        visualizer.height,
+      )
+      worker.postMessage({ scale, canvas }, [canvas])
     })
 
     let stream = visualizer.captureStream()
@@ -88,6 +98,8 @@
 
     recorder.ondataavailable = function (event) {
       chunks.push(event.data)
+
+      console.log(recorder.state)
 
       if (recorder.state === 'recording')
         recorder.stop()

@@ -1,8 +1,9 @@
-let canvas, context, fft = [], duration, position
+let canvas, scale, context, fft = [], duration, position
 
 self.onmessage = function (event) {
   if (event.data.canvas) {
     canvas = event.data.canvas
+    scale = event.data.scale
     context = canvas.getContext('2d')
     setup()
     self.postMessage('fft')
@@ -18,15 +19,15 @@ self.onmessage = function (event) {
   }
 }
 
-let edge = 5
-let gap = 7
+let edge = 10
+let gap = 10
 let dimension = 0
 let radius = 0
 
 function setup() {
   dimension = Math.min(canvas.width, canvas.height)
 
-  context.fillStyle = 'rgb(0,0,0)'
+  context.fillStyle = 'rgba(0,0,0,0)'
   context.fillRect(0,0,canvas.width, canvas.height)
 
   context.translate(canvas.width/2, canvas.height/2)
@@ -45,16 +46,26 @@ function map(value, start, end, newStart, newEnd) {
   return newStart + ((value - start) * (newEnd - newStart)) / (end - start)
 }
 
+let prevPosition = 0
+
 function draw() {
+  let drawTime = position - prevPosition
+  prevPosition = position
+
   context.translate(canvas.width/2, canvas.height/2)
   context.rotate((2 * Math.PI) * (position / duration) - (Math.PI/2))
 
-  for (let i = 0; i < fft.length; i++) {
+  let fftLength = (2 * fft.length) / 3
+  for (let i = 0; i < fftLength; i++) {
     let amplitude = (255 - fft[i])
-    let x = radius - (radius * (i / fft.length))
-    context.fillStyle = `rgba(${amplitude}, ${amplitude}, ${amplitude}, 1)`
+    let x = radius - (radius * (i / fftLength))
+
+    let currentCircumference = Math.PI * x * x
+    let segmentLength = currentCircumference / (duration * 1000)
+    context.fillStyle = `rgba(${amplitude}, ${amplitude}, ${amplitude}, ${0.0075})`
+
     context.beginPath()
-    context.arc(x, 0, map(x, 0, radius, .2, 1), 0, Math.PI * 2)
+    context.arc(x, 0, Math.max(1, segmentLength), 0, Math.PI * 2)
     context.fill()
   }
 

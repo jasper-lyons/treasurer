@@ -3,30 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <title></title>
+  <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body>
-  <video id="video" width="1080" height="720"></video>
-  <input id="file" type="file">
-  <a id="download">Download</a>
-  <script>
-    const worker = new Worker('worker.js')
-    const file = document.getElementById('file');
+  <div class="mx-auto max-w-5xl p-2">
+    <h1 class="text-5xl py-2">The Mint</h1>
+    <p class="py-2">Mint an audio visualizer coin.</p>
 
-    let audioContext = new (AudioContext || WebkitAudioContext)()
-    let analyser = audioContext.createAnalyser()
-    let recorderDestination = audioContext.createMediaStreamDestination()
-    let audioFile, audioUrl, source
-    let visualizer = document.createElement('canvas')
-    let scale = window.devicePixelRatio
-    visualizer.width = Math.floor(1080 * scale)
-    visualizer.height = Math.floor(720 * scale)
-    let context = visualizer.getContext('2d')
-    // setup the static areas of the video
-    context.fillStyle = 'rgb(0,0,0)'
-    context.fillRect(0, 0, visualizer.width, visualizer.height)
-    context.fillStyle = 'rgb(255,255,255)'
-    context.font = '120px serif'
-    context.fillText('treasurer', 50, 120)
+    <div class="relative group">
+      <video id="video" class="w-full bg-black"></video>
+      <div id="upload" class="opacity-0 group-hover:opacity-100 absolute inset-0 text-xl text-white flex justify-center items-center">Load an Audio File</div>
+    </div>
+
+    <input class="hidden" id="file" type="file">
+    <a class="hidden" id="download">Download</a>
+  </div>
+  <script>
+    function setController(element, attributes) {
+      for (let attr in attributes)
+        element[attr] = attributes[attr]
+
+      return element
+    }
 
     function readFile(file, callback) {
       let reader = new FileReader(file)
@@ -34,87 +32,136 @@
       reader.readAsArrayBuffer(file)
     }
 
-    let stopped = false
-    worker.addEventListener('message', async (e) => {
-      if (e.data.image) {
-        let width = 4 * visualizer.height / 5
-        let bitmap = await createImageBitmap(e.data.image, {
-          resizeWidth: width,
-          resizeHeight: width
-        })
-        context.drawImage(
-          bitmap,
-          visualizer.width/2 - bitmap.width/2,
-          visualizer.height/2 - bitmap.height/2)
-      }
-
-      if (!stopped) {
-        let fft = new Uint8Array(analyser.frequencyBinCount)
-        analyser.getByteFrequencyData(fft)
-        worker.postMessage({
-          fft: fft,
-          duration: source.buffer?.duration,
-          position: source.context.currentTime
-        })
+    let audio = setController(new (AudioContext || WebkitAudioContext)(), {
+      init() {
+        this.analyser = this.createAnalyser()
+        this.recorderDestination = this.createMediaStreamDestination()
+        this.silence = this.createBufferSource()
+        this.source = this.createBufferSource()
+        this.source.connect(this.analyser)
+        this.source.connect(this.destination)
+        this.source.connect(this.recorderDestination)
+        this.silence.connect(this.recorderDestination)
       }
     })
+    audio.init()
 
-    file.addEventListener('change', event => {
-      audioFile = event.target.files[0]
+    let visualizer = setController(document.createElement('canvas'), {
+      init() {
+        this.scale = window.devicePixelRatio
+        this.width = Math.floor(1080 * this.scale)
+        this.height = Math.floor(720 * this.scale)
+        this.context = this.getContext('2d')
 
-      readFile(audioFile, (buffer) => {
-        audioContext.decodeAudioData(buffer, (audioBuffer) => {
-          recorder.start(audioBuffer.duration * 1000)
-          source.buffer = audioBuffer
-          source.start()
-          video.play()
+        // setup the static areas of the video
+        this.context.fillStyle = 'rgb(0,0,0)'
+        this.context.fillRect(0, 0, this.width, this.height)
+        this.context.fillStyle = 'rgb(255,255,255)'
+        this.context.font = '120px serif'
+        this.context.fillText('treasurer', 3 * (this.width/4) - (this.context.measureText('treasurer').width/2), (this.height/2) - 100)
+        this.context.fillStyle = 'rgb(255,255,255)'
+        this.context.font = '200px serif'
+        this.context.fillText('the quiet', 3 * (this.width/4) - (this.context.measureText('the quiet').width/2), (this.height/2) + (200/2))
+
+        this.stream = visualizer.captureStream()
+      }
+    })
+    visualizer.init()
+
+    const worker = setController(new Worker('worker.js'), {
+      stopped: false,
+      stop: () => this.stopped = true,
+      onmessage: async (e) => {
+        if (e.data.image) {
+          let width = 4 * visualizer.height / 5
+          let bitmap = await createImageBitmap(e.data.image, {
+            resizeWidth: width,
+            resizeHeight: width
+          })
+          visualizer.context.drawImage(
+            bitmap,
+            100 + visualizer.width/4 - bitmap.width/2,
+            visualizer.height/2 - bitmap.height/2
+          )
+        }
+
+        if (!this.stopped) {
+          let fft = new Uint8Array(audio.analyser.frequencyBinCount)
+          audio.analyser.getByteFrequencyData(fft)
+          worker.postMessage({
+            fft: fft,
+            duration: audio.source.buffer?.duration,
+            position: audio.source.context.currentTime
+          })
+        }
+      }
+    })
+
+    const file = setController(document.getElementById('file'), {
+      onchange: (event) => {
+        this.audioFile = event.target.files[0]
+
+        readFile(this.audioFile, (buffer) => {
+          audio.decodeAudioData(buffer, (audioBuffer) => {
+            let timeslice = 1000 + (audioBuffer.duration * 1000)
+            recorder.start(timeslice)
+            audio.source.buffer = audioBuffer
+            audio.source.start()
+            video.play()
+          })
         })
-      })
-
-      source = audioContext.createBufferSource()
-      source.connect(analyser)
-      source.connect(audioContext.destination)
-      source.connect(recorderDestination)
-      
-      let canvas = new OffscreenCanvas(
-        visualizer.height,
-        visualizer.height,
-      )
-      worker.postMessage({ scale, canvas }, [canvas])
+        
+        let canvas = new OffscreenCanvas(
+          visualizer.height,
+          visualizer.height,
+        )
+        worker.postMessage({ scale: visualizer.scale, canvas }, [canvas])
+      }
     })
 
-    let stream = visualizer.captureStream()
-    let video = document.getElementById('video')
-    video.srcObject = stream
+    const upload = setController(document.getElementById('upload'), {
+      ondragover: (e) => e.preventDefault(),
+      ondragenter: (e) => e.preventDefault(),
+      onclick: (e) => file.click(),
+      ondrop: (e) => {
+        const dataTransfer = new DataTransfer()
+        dataTransfer.items.add(e.dataTransfer.files[0])
+        file.files = dataTransfer.files
 
-    let chunks = []
-
-    let recorder = new MediaRecorder(new MediaStream([
-      stream.getVideoTracks()[0],
-      recorderDestination.stream.getAudioTracks()[0]
-    ]),{
-      mimeType: 'video/webm'
+        e.preventDefault()
+      } 
     })
 
-    recorder.ondataavailable = function (event) {
-      chunks.push(event.data)
+    const download = setController(document.getElementById('download'), {})
 
-      console.log(recorder.state)
+    let video = setController(document.getElementById('video'), {
+      srcObject: visualizer.stream
+    })
 
-      if (recorder.state === 'recording')
-        recorder.stop()
-    }
+    let mediaStream = new MediaStream([
+      visualizer.stream.getVideoTracks()[0],
+      audio.recorderDestination.stream.getAudioTracks()[0]
+    ])
 
-    recorder.onstop = function(event) {
-      stopped = true
-      let blob = new Blob(chunks, { type: 'video/webm' })
-      let url = URL.createObjectURL(blob)
-      let a = document.getElementById('download')
-      a.download = `${audioFile.name}.webm`
-      a.href = url
-    }
+    const recorder = setController(
+      new MediaRecorder(mediaStream, { mimeType: 'video/webm' }),
+      {
+        chunks: [],
+        ondataavailable: (event) => {
+          this.chunks.push(event.data)
 
-    file.addEventListener('click', () => this.value = "")
+          if (this.state === 'recording')
+            this.stop()
+        },
+        onstop: (event) => {
+          worker.stop()
+          let blob = new Blob(this.chunks, { type: 'video/webm' })
+          let url = URL.createObjectURL(blob)
+          download.download = `${file.audioFile.name}.webm`
+          download.href = url
+        }
+      }
+    )
   </script>
 </body>
 </html>

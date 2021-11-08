@@ -11,7 +11,7 @@ self.onmessage = function (event) {
     fft = event.data.fft
     duration = event.data.duration
     position = event.data.position
-    if (duration && position)
+    if (duration && position && duration > position)
       draw()
 
     let image = context.getImageData(0, 0, canvas.width, canvas.height)
@@ -19,8 +19,9 @@ self.onmessage = function (event) {
   }
 }
 
+let padding = 40
 let edge = 10
-let gap = 10
+let gap = 20
 let dimension = 0
 let radius = 0
 
@@ -32,13 +33,15 @@ function setup() {
 
   context.translate(canvas.width/2, canvas.height/2)
 
+  /*
   context.strokeStyle = 'rgb(255,255,255)'
   context.lineWidth = edge
   context.beginPath()
-  context.arc(0, 0, (dimension/2) - (edge/2), 0, Math.PI * 2)
+  context.arc(0, 0, (dimension/2) - (edge/2) - padding, 0, Math.PI * 2)
   context.stroke();
+  */
 
-  radius = (dimension/2) - (edge/2) - gap
+  radius = (dimension/2) - (edge/2) - gap - padding
   context.setTransform(1,0,0,1,0,0)
 }
 
@@ -65,7 +68,7 @@ function draw() {
     context.fillStyle = `rgba(${amplitude}, ${amplitude}, ${amplitude}, ${0.0075})`
 
     context.beginPath()
-    context.arc(x, 0, Math.max(1, segmentLength), 0, Math.PI * 2)
+    context.arc(x, 0, Math.max(2, segmentLength), 0, Math.PI * 2)
     context.fill()
   }
 

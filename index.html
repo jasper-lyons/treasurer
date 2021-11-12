@@ -63,6 +63,7 @@
     }
 
     let audio = setController(new (AudioContext || WebkitAudioContext)(), {
+      startedAt: null,
       init() {
         this.analyser = this.createAnalyser()
         this.recorderDestination = this.createMediaStreamDestination()
@@ -72,6 +73,13 @@
         this.source.connect(this.destination)
         this.source.connect(this.recorderDestination)
         this.silence.connect(this.recorderDestination)
+      },
+      start() {
+        this.startedAt = this.currentTime
+        audio.source.start()
+      },
+      position() {
+        return this.currentTime - this.startedAt
       }
     })
     audio.init()
@@ -168,7 +176,7 @@
           worker.postMessage({
             fft: fft,
             duration: audio.source.buffer?.duration,
-            position: audio.source.context.currentTime
+            position: audio.position()
           })
         }
       }
@@ -185,7 +193,8 @@
             let timeslice = 1000 + (audioBuffer.duration * 1000)
             recorder.start(timeslice)
             audio.source.buffer = audioBuffer
-            audio.source.start()
+            audio.start()
+            console.log(audio.startedAt)
             video.muted = false
           })
         })

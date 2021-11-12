@@ -17,32 +17,64 @@
       <h1 class="inline text-5xl">The Mint</h1>
       <p class="inline ml-3 text-lg">Mint an audio coin visualization.</p>
     </div>
+
     <p class="px-3 py-2">
       We used this tool to generate all of the video for our first E.P. <a class="underline" href="https://treasurer.bandcamp.com/album/compass">Compass</a>.
       We released this tool so that you could make your own audio coin (a Circular Spectrogram really) from you own tracks to use in your own videos and visualizers.
     </p>
 
-    <div class="py-4 px-3 text-lg">
-      <div>
-        <label for="">
-          <span class="font-bold">Artist Name: </span>
-          <input class="max-w-xl" type="text" id="artist" value="treasurer" placeholder="artist name">
-        </label>
-        <label for="">
-          <span class="font-bold">Track Name: </span>
-          <input class="max-w-xl" type="text" id="track" value="the quiet" placeholder="track name">
-        </label>
-        <button id="update" class="hover:bg-gray-700 px-3 py-2 text-white bg-black rounded">Update</button>
+    <div id="video-container" class="h-full margin-0 text-lg flex items-stretch" style="transition: margin-left .5s, margin-right .5s">
+      <div class="relative group">
+        <video id="video" class="rounded-l rounded-b w-full bg-black" muted autoplay></video>
+        <div id="upload" class="opacity-0 group-hover:opacity-100 absolute inset-0 text-xl text-white flex justify-center items-center">Load an Audio File</div>
+      </div>
+
+      <div id="settings" class="border-2 border-black w-0 overflow-x-hidden" style="transition: width .5s">
+        <div class="py-2 flex flex-col w-48" style="">
+          <label for="">
+            <span class="font-bold">Artist Name</span>
+            <textarea class="max-w-xl border-b-2" type="text" id="artist" placeholder="artist name">treasurer</textarea>
+          </label>
+          <label class="flex items-center" for="">
+            Size: <input id="artist-name-size" class="ml-2" type="range" min="20" max="240" value="120" step="10">
+          </label>
+          <label class="flex items-center" for="">
+            Y Pos: <input id="artist-name-y-position" class="ml-2" type="range" min="0" max="100" value="0" step="1">
+          </label>
+          <label class="flex items-center" for="">
+            X Pos: <input id="artist-name-x-position" class="ml-2" type="range" min="0.75" max="1.25" value="1.0" step="0.01">
+          </label>
+          <label class="mt-3" for="" >
+            <span class="font-bold">Track Name</span>
+            <textarea class="max-w-xl border-b-2" type="text" id="track" placeholder="track name">the quiet</textarea>
+          </label>
+          <label class="flex items-center" for="">
+            Size: <input id="track-name-size" class="ml-2" type="range" min="20" max="240" value="120" step="10">
+          </label>
+          <label class="flex items-center" for="">
+            Y Pos: <input id="track-name-y-position" class="ml-2" type="range" min="0" max="100" value="0" step="1">
+          </label>
+          <label class="flex items-center" for="">
+            X Pos: <input id="track-name-x-position" class="ml-2" type="range" min="0.75" max="1.25" value="1.0" step="0.01">
+          </label>
+          <div class="mt-3" for="">
+            <span class="font-bold">Spectrogram</span>
+          </div>
+          <label class="flex items-center" for="">
+            Size: <input id="spectrogram-size" class="ml-2" type="range" min="0.75" max="1.25" value="1.0" step="0.01">
+          </label>
+          <label class="flex items-center" for="">
+            Position: <input id="spectrogram-position" class="ml-2" type="range" min="0" max="1" value="0" step="0.01">
+          </label>
+        </div>
+      </div>
+      
+      <div class="-mr-20">
+        <button id="settings-btn" class="transform -translate-y-11 origin-bottom-left rotate-90 rounded-t hover:bg-gray-700 px-3 py-2 text-white bg-black rounded-top">settings</button>
       </div>
     </div>
 
-    <div class="relative group">
-      <video id="video" class="w-full bg-black" muted autoplay></video>
-      <div id="upload" class="opacity-0 group-hover:opacity-100 absolute inset-0 text-xl text-white flex justify-center items-center">Load an Audio File</div>
-    </div>
-
     <input class="hidden" id="file" type="file">
-
 
     <div class="py-4 flex justify-center">
       <a class="px-4 py-3 bg-gray-300 text-white rounded cursor-not-allowed" id="download">Download</a>
@@ -85,38 +117,153 @@
     audio.init()
 
     let artist = setController(document.getElementById('artist') ,{
-      onchange(e) {
-        visualizer.drawText(this)
+      onkeyup(e) {
+        visualizer.update()
       },
       color: 'rgb(255,255,255)',
-      font: '120px serif',
+      fontSize: 120,
+      fontFamily: 'serif',
+      font() { return `${this.fontSize}px ${this.fontFamily}`},
+      xOffset: 1,
       x(context, size) {
-        return 3 * (context.width/4) - (size.width/2)
+        return (3 * (context.width/4) - (size.width/2)) * this.xOffset
       },
+      yOffset: 0,
       y(context) {
-        return (context.height/2) - 100
+        return ((context.height/2) - 100) - this.yOffset
+      }
+    })
+
+    setController(document.getElementById('artist-name-size'), {
+      oninput(e) {
+        artist.fontSize = e.target.value
+        visualizer.update()
+      }
+    })
+
+    setController(document.getElementById('artist-name-y-position'), {
+      oninput(e) {
+        artist.yOffset = parseInt(e.target.value, 10)
+        visualizer.update()
+      }
+    })
+
+    setController(document.getElementById('artist-name-x-position'), {
+      oninput(e) {
+        artist.xOffset = parseFloat(e.target.value)
+        visualizer.update()
       }
     })
 
     let track = setController(document.getElementById('track'), {
-      onchange(e) {
-        visualizer.drawText(this)
+      onkeyup(e) {
+        visualizer.update()
       },
       color: 'rgb(255,255,255)',
-      font: '200px serif',
+      fontSize: 200,
+      fontFamily: 'serif',
+      font() { return `${this.fontSize}px ${this.fontFamily}`},
+      xOffset: 1,
       x(context, size) {
-        return 3 * (context.width/4) - (size.width/2)
+        return (3 * (context.width/4) - (size.width/2)) * this.xOffset
       },
+      yOffset: 0,
       y(context) {
-        return (context.height/2) + (200/2)
+        return (context.height/2) + (200/2) + this.yOffset
       }
     })
 
-    let update = setController(document.getElementById('update'), {
+    setController(document.getElementById('track-name-size'), {
+      oninput(e) {
+        track.fontSize = e.target.value
+        visualizer.update()
+      }
+    })
+
+    setController(document.getElementById('track-name-y-position'), {
+      oninput(e) {
+        track.yOffset = parseInt(e.target.value, 10)
+        visualizer.update()
+      }
+    })
+
+    setController(document.getElementById('track-name-x-position'), {
+      oninput(e) {
+        track.xOffset = parseFloat(e.target.value)
+        visualizer.update()
+      }
+    })
+
+    let spectrogramSize = 1
+    setController(document.getElementById('spectrogram-size'), {
+      showGuide: false,
+      oninput(e) { 
+        spectrogramSize = parseFloat(e.target.value)
+        this.drawGuide()
+      },
+      drawGuide(){
+        if (this.showGuide) {
+          visualizer.update()
+          visualizer.context.translate(spectrogram.width()/2, spectrogram.height()/2)
+          visualizer.context.strokeStyle = "rgb(255,255,255)"
+          visualizer.context.beginPath()
+          visualizer.context.arc(spectrogram.x(), spectrogram.y(), spectrogram.width()/2, 0, 2*Math.PI)
+          visualizer.context.stroke()
+          visualizer.context.setTransform(1, 0, 0, 1, 0, 0)
+        }
+      },
+      onmousedown() {
+        this.showGuide = true
+        this.drawGuide()
+      },
+      onmouseup() {
+        this.showGuide = false
+        visualizer.update()
+      }
+    })
+
+    let spectrogramPosition = 0;
+    setController(document.getElementById('spectrogram-position'), {
+      showGuide: true,
+      oninput(e) {
+        spectrogramPosition = parseFloat(e.target.value)
+
+        this.drawGuide()
+      },
+      drawGuide(){
+        if (this.showGuide) {
+          visualizer.update()
+          visualizer.context.translate(spectrogram.width()/2, spectrogram.height()/2)
+          visualizer.context.strokeStyle = "rgb(255,255,255)"
+          visualizer.context.beginPath()
+          visualizer.context.arc(spectrogram.x(), spectrogram.y(), spectrogram.width()/2, 0, 2*Math.PI)
+          visualizer.context.stroke()
+          visualizer.context.setTransform(1, 0, 0, 1, 0, 0)
+        }
+      },
+      onmousedown() {
+        this.showGuide = true
+        this.drawGuide()
+      },
+      onmouseup() {
+        this.showGuide = false
+        visualizer.update()
+      }
+    })
+
+    let settings = setController(document.getElementById('settings-btn'), {
       onclick(e) {
-        visualizer.clear()
-        visualizer.drawText(artist)
-        visualizer.drawText(track)
+        let settings = document.getElementById('settings')
+        settings.classList.toggle('w-1/2')
+        settings.classList.toggle('px-2')
+        settings.classList.toggle('border-b-2')
+        settings.classList.toggle('rounded-br')
+
+        let videoContainer = document.getElementById('video-container')
+        videoContainer.classList.toggle('-mx-32')
+        videoContainer.classList.toggle('h-20')
+
+        video.classList.toggle('rounded-b')
       }
     })
 
@@ -127,46 +274,61 @@
         this.height = Math.floor(720 * this.scale)
         this.context = this.getContext('2d')
 
-        this.clear()
-        this.drawText(artist)
-        this.drawText(track)
+        this.update()
 
         this.stream = visualizer.captureStream()
       },
       clear() {
         // setup the static areas of the video
-        this.context.fillStyle = 'rgb(0,0,0)'
-        this.context.fillRect(0, 0, this.width, this.height)
+        this.context.clearRect(0, 0, this.width, this.height)
       },
       drawText(text) {
-        this.context.fillStyle = text.color
-        this.context.font = text.font
-        let size = this.context.measureText(text.value)
+        text.value.split("\n").forEach((line, index) => {
+          this.context.fillStyle = text.color
+          this.context.font = text.font()
+          let size = this.context.measureText(line)
 
-        this.context.fillStyle = 'rgb(0,0,0)'
-        this.context.fillRect(text.x(this, size), text.y(this, size), size.width, size.height)
+          this.context.fillStyle = 'rgb(0,0,0)'
+          this.context.fillRect(text.x(this, size), text.y(this, size) + (text.fontSize * index), size.width, size.height)
 
-        this.context.fillStyle = text.color
-        this.context.font = text.font
-        this.context.fillText(text.value, text.x(this, size), text.y(this, size))
+          this.context.fillStyle = text.color
+          this.context.font = text.font()
+          this.context.fillText(line, text.x(this, size), text.y(this, size) + (text.fontSize * index))
+        })
+      },
+      update() {
+        this.clear()
+        this.drawText(artist)
+        this.drawText(track)
       }
     })
     visualizer.init()
+
+    let spectrogram = {
+      width() {
+        return (4 * visualizer.height / 5) * spectrogramSize
+      },
+      height() {
+        return (4 * visualizer.height / 5) * spectrogramSize
+      },
+      x() { return visualizer.width/4 + ((visualizer.width/2) * spectrogramPosition) - this.width()/2 },
+      y() { return visualizer.height/2 - this.height()/2 }
+    }
 
     const worker = setController(new Worker('worker.js'), {
       stopped: false,
       stop() { this.stopped = true },
       async onmessage(e) {
         if (e.data.image) {
-          let width = 4 * visualizer.height / 5
           let bitmap = await createImageBitmap(e.data.image, {
-            resizeWidth: width,
-            resizeHeight: width
+            resizeWidth: spectrogram.width(),
+            resizeHeight: spectrogram.width()
           })
+          visualizer.update()
           visualizer.context.drawImage(
             bitmap,
-            100 + visualizer.width/4 - bitmap.width/2,
-            visualizer.height/2 - bitmap.height/2
+            spectrogram.x(),
+            spectrogram.y()
           )
         }
 

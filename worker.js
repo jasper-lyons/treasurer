@@ -33,14 +33,6 @@ function setup() {
 
   context.translate(canvas.width/2, canvas.height/2)
 
-  /*
-  context.strokeStyle = 'rgb(255,255,255)'
-  context.lineWidth = edge
-  context.beginPath()
-  context.arc(0, 0, (dimension/2) - (edge/2) - padding, 0, Math.PI * 2)
-  context.stroke();
-  */
-
   radius = (dimension/2) - (edge/2) - gap - padding
   context.setTransform(1,0,0,1,0,0)
 }
@@ -63,9 +55,9 @@ function draw() {
     let amplitude = (255 - fft[i])
     let x = radius - (radius * (i / fftLength))
 
-    let currentCircumference = Math.PI * x * x
+    let currentCircumference = 2 * Math.PI * x
     let segmentLength = currentCircumference / (duration * 1000)
-    context.fillStyle = `rgba(${amplitude}, ${amplitude}, ${amplitude}, ${0.0075})`
+    context.fillStyle = `rgba(${amplitude}, ${amplitude}, ${amplitude}, ${0.8})`
 
     context.beginPath()
     context.arc(x, 0, Math.max(2, segmentLength), 0, Math.PI * 2)

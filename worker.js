@@ -50,7 +50,7 @@ function draw() {
   context.translate(canvas.width/2, canvas.height/2)
   context.rotate((2 * Math.PI) * (position / duration) - (Math.PI/2))
 
-  let fftLength = (2 * fft.length) / 3
+  let fftLength = fft.length
   for (let i = 0; i < fftLength; i++) {
     let amplitude = (255 - fft[i])
     let x = radius - (radius * (i / fftLength))

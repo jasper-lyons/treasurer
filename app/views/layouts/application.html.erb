@@ -1,11 +1,22 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full w-full">
 <head>
   <meta charset="UTF-8">
   <title></title>
   <link rel="stylesheet" href="<%= stylesheet_path('application') %>">
 </head>
-<body>
+<body class="h-full w-full">
+  <div class="bg-black w-full">
+    <nav class="flex justify-between max-w-5xl mx-auto">
+      <a href="/">
+        <h2 class="text-5xl font-serif p-4 text-white">treasurer</h2>
+      </a>
+
+      <div class="flex items-center px-4 font-serif">
+        <%= link_to 'the coin mint', mint_path, class: 'text-white p-4 underline' %>
+      </div>
+    </nav>
+  </div>
   <%= yield %>
 </body>
 </html>

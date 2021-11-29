@@ -15,3 +15,5 @@ module RailsWithTailwindcss
     config.public_file_server.enabled = true
   end
 end
+
+Rails.application.initialize!

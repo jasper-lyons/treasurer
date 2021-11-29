@@ -1,0 +1,421 @@
+<style>
+  .logo {
+    font: 64pt serif;
+  }
+</style>
+
+<h2 class="logo text-center p-4 bg-black text-white">treasurer</h2>
+<div class="mx-auto max-w-5xl p-2">
+  <div class="py-4 px-3">
+    <h1 class="inline text-5xl">The Mint</h1>
+    <p class="inline ml-3 text-lg">Mint an audio coin visualization.</p>
+  </div>
+
+  <p class="px-3 py-2">
+    We used this tool to generate all of the video for our first E.P. <a class="underline" href="https://treasurer.bandcamp.com/album/compass">Compass</a>.
+    We released this tool so that you could make your own audio coin (a Circular Spectrogram really) from you own tracks to use in your own videos and visualizers.
+  </p>
+
+  <div id="video-container" class="h-full margin-0 text-lg flex items-stretch" style="transition: margin-left .5s, margin-right .5s">
+    <div class="relative group">
+      <video id="video" class="rounded-l rounded-b w-full bg-black" muted autoplay></video>
+      <div id="upload" class="opacity-0 group-hover:opacity-100 absolute inset-0 text-xl text-white flex justify-center items-center">Load an Audio File</div>
+    </div>
+
+    <div id="settings" class="border-2 border-black w-0 overflow-x-hidden" style="transition: width .5s">
+      <div class="py-2 flex flex-col w-48" style="">
+        <label for="">
+          <span class="font-bold">Artist Name</span>
+          <textarea class="max-w-xl border-b-2" type="text" id="artist" placeholder="artist name">treasurer</textarea>
+        </label>
+        <label class="flex items-center" for="">
+          Size: <input id="artist-name-size" class="ml-2" type="range" min="20" max="240" value="120" step="10">
+        </label>
+        <label class="flex items-center" for="">
+          Y Pos: <input id="artist-name-y-position" class="ml-2" type="range" min="0" max="100" value="0" step="1">
+        </label>
+        <label class="flex items-center" for="">
+          X Pos: <input id="artist-name-x-position" class="ml-2" type="range" min="0.75" max="1.25" value="1.0" step="0.01">
+        </label>
+        <label class="mt-3" for="" >
+          <span class="font-bold">Track Name</span>
+          <textarea class="max-w-xl border-b-2" type="text" id="track" placeholder="track name">the quiet</textarea>
+        </label>
+        <label class="flex items-center" for="">
+          Size: <input id="track-name-size" class="ml-2" type="range" min="20" max="240" value="120" step="10">
+        </label>
+        <label class="flex items-center" for="">
+          Y Pos: <input id="track-name-y-position" class="ml-2" type="range" min="0" max="100" value="0" step="1">
+        </label>
+        <label class="flex items-center" for="">
+          X Pos: <input id="track-name-x-position" class="ml-2" type="range" min="0.75" max="1.25" value="1.0" step="0.01">
+        </label>
+        <div class="mt-3" for="">
+          <span class="font-bold">Spectrogram</span>
+        </div>
+        <label class="flex items-center" for="">
+          Size: <input id="spectrogram-size" class="ml-2" type="range" min="0.75" max="1.25" value="1.0" step="0.01">
+        </label>
+        <label class="flex items-center" for="">
+          Position: <input id="spectrogram-position" class="ml-2" type="range" min="0" max="1" value="0" step="0.01">
+        </label>
+      </div>
+    </div>
+    
+    <div class="-mr-20">
+      <button id="settings-btn" class="transform -translate-y-11 origin-bottom-left rotate-90 rounded-t hover:bg-gray-700 px-3 py-2 text-white bg-black rounded-top">settings</button>
+    </div>
+  </div>
+
+  <input class="hidden" id="file" type="file">
+
+  <div class="py-4 flex justify-center">
+    <a class="px-4 py-3 bg-gray-300 text-white rounded cursor-not-allowed" id="download">Download</a>
+  </div>
+</div>
+<script>
+  function setController(element, attributes) {
+    for (let attr in attributes)
+      element[attr] = attributes[attr]
+
+    return element
+  }
+
+  function readFile(file, callback) {
+    let reader = new FileReader(file)
+    reader.onload = function (e) { callback(e.target.result) }
+    reader.readAsArrayBuffer(file)
+  }
+
+  let audio = setController(new (AudioContext || WebkitAudioContext)(), {
+    startedAt: null,
+    init() {
+      this.analyser = this.createAnalyser()
+      this.recorderDestination = this.createMediaStreamDestination()
+      this.silence = this.createBufferSource()
+      this.source = this.createBufferSource()
+      this.source.connect(this.analyser)
+      this.source.connect(this.destination)
+      this.source.connect(this.recorderDestination)
+      this.silence.connect(this.recorderDestination)
+    },
+    start() {
+      this.startedAt = this.currentTime
+      audio.source.start()
+    },
+    position() {
+      return this.currentTime - this.startedAt
+    }
+  })
+  audio.init()
+
+  let artist = setController(document.getElementById('artist') ,{
+    onkeyup(e) {
+      visualizer.update()
+    },
+    color: 'rgb(255,255,255)',
+    fontSize: 120,
+    fontFamily: 'serif',
+    font() { return `${this.fontSize}px ${this.fontFamily}`},
+    xOffset: 1,
+    x(context, size) {
+      return (3 * (context.width/4) - (size.width/2)) * this.xOffset
+    },
+    yOffset: 0,
+    y(context) {
+      return ((context.height/2) - 100) - this.yOffset
+    }
+  })
+
+  setController(document.getElementById('artist-name-size'), {
+    oninput(e) {
+      artist.fontSize = e.target.value
+      visualizer.update()
+    }
+  })
+
+  setController(document.getElementById('artist-name-y-position'), {
+    oninput(e) {
+      artist.yOffset = parseInt(e.target.value, 10)
+      visualizer.update()
+    }
+  })
+
+  setController(document.getElementById('artist-name-x-position'), {
+    oninput(e) {
+      artist.xOffset = parseFloat(e.target.value)
+      visualizer.update()
+    }
+  })
+
+  let track = setController(document.getElementById('track'), {
+    onkeyup(e) {
+      visualizer.update()
+    },
+    color: 'rgb(255,255,255)',
+    fontSize: 200,
+    fontFamily: 'serif',
+    font() { return `${this.fontSize}px ${this.fontFamily}`},
+    xOffset: 1,
+    x(context, size) {
+      return (3 * (context.width/4) - (size.width/2)) * this.xOffset
+    },
+    yOffset: 0,
+    y(context) {
+      return (context.height/2) + (200/2) + this.yOffset
+    }
+  })
+
+  setController(document.getElementById('track-name-size'), {
+    oninput(e) {
+      track.fontSize = e.target.value
+      visualizer.update()
+    }
+  })
+
+  setController(document.getElementById('track-name-y-position'), {
+    oninput(e) {
+      track.yOffset = parseInt(e.target.value, 10)
+      visualizer.update()
+    }
+  })
+
+  setController(document.getElementById('track-name-x-position'), {
+    oninput(e) {
+      track.xOffset = parseFloat(e.target.value)
+      visualizer.update()
+    }
+  })
+
+  let spectrogramSize = 1
+  setController(document.getElementById('spectrogram-size'), {
+    showGuide: false,
+    oninput(e) { 
+      spectrogramSize = parseFloat(e.target.value)
+      this.drawGuide()
+    },
+    drawGuide(){
+      if (this.showGuide) {
+        visualizer.update()
+        visualizer.context.translate(spectrogram.width()/2, spectrogram.height()/2)
+        visualizer.context.strokeStyle = "rgb(255,255,255)"
+        visualizer.context.beginPath()
+        visualizer.context.arc(spectrogram.x(), spectrogram.y(), spectrogram.width()/2, 0, 2*Math.PI)
+        visualizer.context.stroke()
+        visualizer.context.setTransform(1, 0, 0, 1, 0, 0)
+      }
+    },
+    onmousedown() {
+      this.showGuide = true
+      this.drawGuide()
+    },
+    onmouseup() {
+      this.showGuide = false
+      visualizer.update()
+    }
+  })
+
+  let spectrogramPosition = 0;
+  setController(document.getElementById('spectrogram-position'), {
+    showGuide: true,
+    oninput(e) {
+      spectrogramPosition = parseFloat(e.target.value)
+
+      this.drawGuide()
+    },
+    drawGuide(){
+      if (this.showGuide) {
+        visualizer.update()
+        visualizer.context.translate(spectrogram.width()/2, spectrogram.height()/2)
+        visualizer.context.strokeStyle = "rgb(255,255,255)"
+        visualizer.context.beginPath()
+        visualizer.context.arc(spectrogram.x(), spectrogram.y(), spectrogram.width()/2, 0, 2*Math.PI)
+        visualizer.context.stroke()
+        visualizer.context.setTransform(1, 0, 0, 1, 0, 0)
+      }
+    },
+    onmousedown() {
+      this.showGuide = true
+      this.drawGuide()
+    },
+    onmouseup() {
+      this.showGuide = false
+      visualizer.update()
+    }
+  })
+
+  let settings = setController(document.getElementById('settings-btn'), {
+    onclick(e) {
+      let settings = document.getElementById('settings')
+      settings.classList.toggle('w-1/2')
+      settings.classList.toggle('px-2')
+      settings.classList.toggle('border-b-2')
+      settings.classList.toggle('rounded-br')
+
+      let videoContainer = document.getElementById('video-container')
+      videoContainer.classList.toggle('-mx-32')
+      videoContainer.classList.toggle('h-20')
+
+      video.classList.toggle('rounded-b')
+    }
+  })
+
+  let visualizer = setController(document.createElement('canvas'), {
+    init() {
+      this.scale = window.devicePixelRatio
+      this.width = Math.floor(1080 * this.scale)
+      this.height = Math.floor(720 * this.scale)
+      this.context = this.getContext('2d')
+
+      this.update()
+
+      this.stream = visualizer.captureStream()
+    },
+    clear() {
+      // setup the static areas of the video
+      this.context.clearRect(0, 0, this.width, this.height)
+    },
+    drawText(text) {
+      text.value.split("\n").forEach((line, index) => {
+        this.context.fillStyle = text.color
+        this.context.font = text.font()
+        let size = this.context.measureText(line)
+
+        this.context.fillStyle = 'rgb(0,0,0)'
+        this.context.fillRect(text.x(this, size), text.y(this, size) + (text.fontSize * index), size.width, size.height)
+
+        this.context.fillStyle = text.color
+        this.context.font = text.font()
+        this.context.fillText(line, text.x(this, size), text.y(this, size) + (text.fontSize * index))
+      })
+    },
+    update() {
+      this.clear()
+      this.drawText(artist)
+      this.drawText(track)
+    }
+  })
+  visualizer.init()
+
+  let spectrogram = {
+    width() {
+      return (4 * visualizer.height / 5) * spectrogramSize
+    },
+    height() {
+      return (4 * visualizer.height / 5) * spectrogramSize
+    },
+    x() { return visualizer.width/4 + ((visualizer.width/2) * spectrogramPosition) - this.width()/2 },
+    y() { return visualizer.height/2 - this.height()/2 }
+  }
+
+    const worker = setController(new Worker("<%= javascript_path('mint.js') %>"), {
+    stopped: false,
+    stop() { this.stopped = true },
+    async onmessage(e) {
+      if (e.data.image) {
+        let bitmap = await createImageBitmap(e.data.image, {
+          resizeWidth: spectrogram.width(),
+          resizeHeight: spectrogram.width()
+        })
+        visualizer.update()
+        visualizer.context.drawImage(
+          bitmap,
+          spectrogram.x(),
+          spectrogram.y()
+        )
+      }
+
+      if (!this.stopped) {
+        let fft = new Uint8Array(audio.analyser.frequencyBinCount)
+        audio.analyser.getByteFrequencyData(fft)
+        worker.postMessage({
+          fft: fft,
+          duration: audio.source.buffer?.duration,
+          position: audio.position()
+        })
+      }
+    }
+  })
+
+  const file = setController(document.getElementById('file'), {
+    onchange(event) {
+      upload.classList.remove('group-hover:opacity-100')
+
+      this.audioFile = event.target.files[0]
+
+      readFile(this.audioFile, (buffer) => {
+        audio.decodeAudioData(buffer, (audioBuffer) => {
+          let timeslice = 1000 + (audioBuffer.duration * 1000)
+          recorder.start(timeslice)
+          audio.source.buffer = audioBuffer
+          audio.start()
+          console.log(audio.startedAt)
+          video.muted = false
+        })
+      })
+      
+      let canvas = new OffscreenCanvas(
+        visualizer.height,
+        visualizer.height,
+      )
+      worker.postMessage({ scale: visualizer.scale, canvas }, [canvas])
+    }
+  })
+
+  const upload = setController(document.getElementById('upload'), {
+    ondragover: (e) => e.preventDefault(),
+    ondragenter: (e) => e.preventDefault(),
+    onclick: (e) => file.click(),
+    ondrop: (e) => {
+      const dataTransfer = new DataTransfer()
+      dataTransfer.items.add(e.dataTransfer.files[0])
+      file.files = dataTransfer.files
+
+      e.preventDefault()
+    } 
+  })
+
+  const download = setController(document.getElementById('download'), {
+    enable() {
+      this.classList.remove('cursor-not-allowed', 'bg-gray-300')
+      this.classList.add('bg-black', 'hover:bg-gray-700')
+      this.disabled = false
+    },
+    disable() {
+      this.classList.add('cursor-not-allowed', 'bg-gray-300')
+      this.classList.remove('bg-black', 'hover:bg-gray-700')
+      this.disabled = true
+    }
+  })
+
+  let video = setController(document.getElementById('video'), {
+    srcObject: visualizer.stream
+  })
+
+  let mediaStream = new MediaStream([
+    visualizer.stream.getVideoTracks()[0],
+    audio.recorderDestination.stream.getAudioTracks()[0]
+  ])
+
+  const recorder = setController(
+    new MediaRecorder(mediaStream, { mimeType: 'video/webm' }),
+    {
+      chunks: [],
+      ondataavailable(event) {
+        this.chunks.push(event.data)
+
+        if (this.state === 'recording')
+          this.stop()
+      },
+      onstop(event) {
+        worker.stop()
+        let blob = new Blob(this.chunks, { type: 'video/webm' })
+        let url = URL.createObjectURL(blob)
+        let name = [artist.value, track.value || file.audioFile.name].filter(Boolean).join(' ')
+        download.download = `${name}.webm`
+        download.href = url
+        download.enable()
+      }
+    }
+  )
+</script>

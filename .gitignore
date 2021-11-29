@@ -1,0 +1,7 @@
+db/*.sqlite3
+tmp
+log
+node_modules
+public/stylesheets
+public/javascripts
+.parcel-cache

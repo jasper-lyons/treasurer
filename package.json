@@ -1,0 +1,24 @@
+{
+  "name": "rails_with_tailwindcss",
+  "scripts": {
+    "assets:compile": "parcel build"
+  },
+  "targets": {
+    "stylesheets": {
+      "source": "app/assets/stylesheets/application.css",
+      "distDir": "public/stylesheets"
+    },
+    "mint-worker": {
+      "source": "app/assets/javascripts/mint.js",
+      "distDir": "public/javascripts"
+    }
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.0",
+    "postcss": "^8.4.4",
+    "tailwindcss": "^2.2.19"
+  },
+  "dependencies": {
+    "parcel": "^2.0.1"
+  }
+}

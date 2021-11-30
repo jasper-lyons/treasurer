@@ -1,25 +1,37 @@
 <div class="w-full h-full bg-black text-white">
-  <div class="max-w-5xl mx-auto pt-12">
-    <div class="flex flex-col w-full items-center space-y-2">
+  <div class="max-w-5xl mx-auto h-full">
+
+    <div class="pt-8 flex flex-col w-full items-center space-y-2 text-lg">
+
+      <% if notice %>
+        <p><%= notice %></p>
+
+      <% else %>
+        <p>- subscribe to get notified on new releases -</p>
+      
+      <% end %>
 
         <%= form_with url: "/subscribe", method: :post, class: 'flex' do |form| %>
-          <%= form.label :email, "email:", class: "bg-black text-black my-auto py-2 pl-4 pr-2 rounded-l-full border-l border-t border-b font-serif text-lg text-white" %>
-          <%= form.email_field :email, class: "bg-black border-t border-b px-2 border-white font-serif focus:outline-none" %>
-          <%= form.submit "subscribe", class: "w-full px-4 py-2 bg-black text-white rounded-r-full hover:bg-white hover:text-black hover:border-white border border-white font-bold text-lg" %>
+          <%= form.label :email, "email:", class: "bg-black text-black my-auto py-2 pl-4 pr-2 rounded-l border-l border-t border-b  text-white" %>
+          <%= form.email_field :email, class: "bg-black border-t border-b px-1 border-white font-sans focus:outline-none" %>
+          <%= form.submit "subscribe", class: "w-full px-4 py-2 bg-black text-white rounded-r hover:bg-white hover:text-black hover:border-white border border-white font-bold text-lg" %>
 
-        <% end %>
-
-        <% if notice %>
-          <p><%= notice %></p>
         <% end %>
     </div>
 
+    <div class="text-center pt-8 pb-12">
+      <h2 class="font-serif inline text-5xl">compass EP <a href="/music" class="underline"> out now </a></h2>
+    </div>
 
-    
-    <div class="relative w-full h-0" style="padding-bottom: 56.25%;">
-      <iframe class="absolute inset-0 h-full w-full" src="https://www.youtube.com/embed/Rn_IpNhFEos" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
+    <div class="text-center border-2 rounded border-white">
+      <div class="relative w-full h-0" style="padding-bottom: 56.25%;">
+        <iframe class="absolute inset-0 h-full w-full" src="https://www.youtube.com/embed/Rn_IpNhFEos" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen>
       </iframe>
+      </div>
     </div>
+    <div class="pb-12 text-lg text-center pt-8">
+        <%= link_to 'make your own coin', mint_path, class: 'text-white p-4 underline' %>
+      </div>
+
   </div>
 </div>
-

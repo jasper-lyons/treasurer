@@ -13,6 +13,8 @@ module RailsWithTailwindcss
 
     # serve static assets from /public
     config.public_file_server.enabled = true
+
+    config.eager_load = true
   end
 end
 

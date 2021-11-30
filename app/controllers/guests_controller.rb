@@ -6,4 +6,5 @@ class GuestsController < ActionController::Base
 
   def mint
   end
+  
 end

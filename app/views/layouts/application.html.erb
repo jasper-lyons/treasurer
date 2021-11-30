@@ -5,16 +5,22 @@
   <title></title>
   <link rel="stylesheet" href="<%= stylesheet_path('application') %>">
 </head>
-<body class="h-full w-full">
+<body class="h-full w-full bg-black text-white">
   <div class="bg-black w-full">
     <nav class="flex justify-between max-w-5xl mx-auto">
       <a href="/">
         <h2 class="text-5xl font-serif p-4 text-white">treasurer</h2>
       </a>
-
-      <div class="flex items-center px-4 font-serif">
+      <div id="navBar" class="flex text-lg font-serif">
+        <div class="flex items-center px-4">
+        <%= link_to 'music', music_path, class: 'text-white p-4 underline' %>
+        </div>
+        <div class="flex items-center px-4">
+        <%= link_to 'link tree', linktrees_path, class: 'text-white p-4 underline' %>
+        </div>
+        <div class="flex items-center px-4">
         <%= link_to 'the coin mint', mint_path, class: 'text-white p-4 underline' %>
-      </div>
+        </div>
     </nav>
   </div>
   <%= yield %>

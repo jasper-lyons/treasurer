@@ -10,7 +10,23 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_11_29_231539) do
+ActiveRecord::Schema.define(version: 2021_11_30_164650) do
+
+  create_table "linktree_items", force: :cascade do |t|
+    t.string "title"
+    t.string "url"
+    t.integer "linktree_id"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["linktree_id"], name: "index_linktree_items_on_linktree_id"
+  end
+
+  create_table "linktrees", force: :cascade do |t|
+    t.string "title"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.string "slug"
+  end
 
   create_table "subscribers", force: :cascade do |t|
     t.datetime "created_at", precision: 6, null: false

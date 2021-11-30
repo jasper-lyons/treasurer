@@ -3,6 +3,6 @@ class SubscribersController < ActionController::Base
 		subscriber = Subscriber.new(email: params[:email])
 		subscriber.save
 
-		redirect_to '/', notice: 'thank you?'
+		redirect_to '/', notice: '- thank you for your subscription -'
 	end
 end

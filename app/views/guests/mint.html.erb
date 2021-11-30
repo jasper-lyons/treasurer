@@ -1,24 +1,24 @@
-<div class="mx-auto max-w-5xl p-2">
-  <div class="py-4 px-3">
+<div class="mx-auto max-w-5xl">
+  <div class="py-4 px-3 text-center">
     <h1 class="font-serif inline text-5xl">the mint</h1>
   </div>
 
-  <p class="px-3 py-2">
+  <p class="px-3 py-2 text-center">
     We used this tool to generate all of the video for our first E.P. <a class="underline" href="https://treasurer.bandcamp.com/album/compass">Compass</a>.
     We released this tool so that you could make your own audio coin (a Circular Spectrogram really) from you own tracks to use in your own videos and visualizers.
   </p>
 
   <div id="video-container" class="h-full margin-0 text-lg flex items-stretch" style="transition: margin-left .5s, margin-right .5s">
     <div class="relative group">
-      <video id="video" class="rounded-l rounded-b w-full bg-black" muted autoplay></video>
+      <video id="video" class="rounded-l rounded-b w-full bg-black border-2 border-white" muted autoplay></video>
       <div id="upload" class="opacity-0 group-hover:opacity-100 absolute inset-0 text-xl text-white flex justify-center items-center">Load an Audio File</div>
     </div>
 
-    <div id="settings" class="border-2 border-black w-0 overflow-x-hidden" style="transition: width .5s">
+    <div id="settings" class="bg-white text-black w-0 overflow-x-hidden" style="transition: width .5s">
       <div class="py-2 flex flex-col w-48" style="">
         <label for="">
           <span class="font-bold">Artist Name</span>
-          <textarea class="max-w-xl border-b-2" type="text" id="artist" placeholder="artist name">treasurer</textarea>
+          <textarea class="max-w-xl border" type="text" id="artist" placeholder="artist name">treasurer</textarea>
         </label>
         <label class="flex items-center" for="">
           Size: <input id="artist-name-size" class="ml-2" type="range" min="20" max="240" value="120" step="10">
@@ -31,7 +31,7 @@
         </label>
         <label class="mt-3" for="" >
           <span class="font-bold">Track Name</span>
-          <textarea class="max-w-xl border-b-2" type="text" id="track" placeholder="track name">the quiet</textarea>
+          <textarea class="max-w-xl border" type="text" id="track" placeholder="track name">the quiet</textarea>
         </label>
         <label class="flex items-center" for="">
           Size: <input id="track-name-size" class="ml-2" type="range" min="20" max="240" value="120" step="10">
@@ -55,14 +55,14 @@
     </div>
     
     <div class="-mr-20">
-      <button id="settings-btn" class="transform -translate-y-11 origin-bottom-left rotate-90 rounded-t hover:bg-gray-700 px-3 py-2 text-white bg-black rounded-top">settings</button>
+      <button id="settings-btn" class="transform -translate-y-11 origin-bottom-left rotate-90 rounded-t hover:bg-white hover:text-black px-3 py-2 text-white bg-black border border-white">settings</button>
     </div>
   </div>
 
   <input class="hidden" id="file" type="file">
 
   <div class="py-4 flex justify-center">
-    <a class="px-4 py-3 bg-gray-300 text-white rounded cursor-not-allowed" id="download">Download</a>
+    <a class="px-4 py-3 bg-gray-400 text-white rounded cursor-not-allowed" id="download">Download</a>
   </div>
 </div>
 <script>
@@ -369,13 +369,13 @@
 
   const download = setController(document.getElementById('download'), {
     enable() {
-      this.classList.remove('cursor-not-allowed', 'bg-gray-300')
-      this.classList.add('bg-black', 'hover:bg-gray-700')
+      this.classList.remove('cursor-not-allowed', 'bg-gray-400')
+      this.classList.add('bg-black','border','border-white', 'hover:bg-white', 'hover:text-black')
       this.disabled = false
     },
     disable() {
-      this.classList.add('cursor-not-allowed', 'bg-gray-300')
-      this.classList.remove('bg-black', 'hover:bg-gray-700')
+      this.classList.add('cursor-not-allowed', 'bg-gray-400')
+      this.classList.remove('bg-black','border','border-white', 'hover:bg-white', 'hover:text-black')
       this.disabled = true
     }
   })

@@ -1,0 +1,25 @@
+<p id="notice"><%= notice %></p>
+
+<h1>Linktrees</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th colspan="3"></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @linktrees.each do |linktree| %>
+      <tr>
+        <td><%= link_to 'Show', linktree %></td>
+        <td><%= link_to 'Edit', edit_linktree_path(linktree) %></td>
+        <td><%= link_to 'Destroy', linktree, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<br>
+
+<%= link_to 'New Linktree', new_linktree_path %>

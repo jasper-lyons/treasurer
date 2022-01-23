@@ -15,6 +15,8 @@ module RailsWithTailwindcss
     config.public_file_server.enabled = true
 
     config.eager_load = true
+
+    config.hosts << "findtreasurer.com"
   end
 end
 

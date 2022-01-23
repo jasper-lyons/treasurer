@@ -9,14 +9,15 @@ require 'active_record/railtie'
 module RailsWithTailwindcss
   class Application < Rails::Application
     # setup logging to STDOUT
+
+    config.hosts << "findtreasurer.com"
+    
     config.logger = Logger.new($stdout)
 
     # serve static assets from /public
     config.public_file_server.enabled = true
 
     config.eager_load = true
-
-    config.hosts << "findtreasurer.com"
   end
 end
 

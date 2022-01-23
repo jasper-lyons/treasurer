@@ -1,7 +1,8 @@
 {
   "name": "rails_with_tailwindcss",
   "scripts": {
-    "assets:compile": "parcel build"
+    "assets:compile": "parcel build",
+    "start": "bundle exec rails s"
   },
   "targets": {
     "stylesheets": {
